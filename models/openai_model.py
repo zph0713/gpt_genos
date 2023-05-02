@@ -1,5 +1,5 @@
 import openai
-from common.base import load_config
+from common.base import load_config,log
 
 
 
@@ -24,13 +24,15 @@ class OpenAIModel:
             reply_content = response.choices[0]['message']['content']
             return reply_content
         except openai.error.APIConnectionError as e:
-            print(e)
+            log.error(e)
+            log.warning("I can't connect to the internet, please check your network connection")
             return "我连接不到网络，请稍后重试"
         except openai.error.Timeout as e:
-            print(e)
+            log.error(e)
+            log.warning("I can't connect to the internet, please check your network connection")
             return "我没有收到消息，请稍后重试"
         except Exception as e:
-            print(e)
+            log.error(e)
+            log.warning("I don't know what you are talking about, please ask me again")
             return "请再问我一次吧"
-
 

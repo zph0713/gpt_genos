@@ -2,7 +2,7 @@
     "genos_description": "A simple chatbot that uses GPT-3 to generate responses.",
     "type_choices": {
         "model": "openai",
-        "channel": "slack"
+        "channels": ["slack"]
     },
     "proxy": "",
     "model":{

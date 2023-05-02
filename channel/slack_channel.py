@@ -1,8 +1,9 @@
 import re
 import json
+import sys
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-from common.base import load_config
+from common.base import load_config,log
 from common.selector import ModelSelector
 
 
@@ -15,7 +16,7 @@ handler = SocketModeHandler(app, load_config()['channels']['slack']['slack_app_t
 def handle_message_events(body, say):
     user_id = body['event']['user']
     channel_id = body['event']['channel']
-
+    log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
     conversations = app.client.conversations_history(
         token=load_config()['channels']['slack']['slack_bot_token'],
         channel=channel_id,
@@ -39,6 +40,7 @@ def handle_message_events(body, say):
         'current_message': body['event']['text'],
     }
     reply_content = SlackChannel().handle_message(conversation_info)
+    log.info(f"Bot replies: {reply_content}")
     say(reply_content)
 
 
@@ -47,13 +49,14 @@ def handle_message_events(body, say):
 class SlackChannel():
     def startup(self):
         handler.start()
-        print("Slack channel is running...")
+        log.info("Slack channel is running...")
 
     def handle_message(self, message):
         conversation_context = message['conversation_context']
         current_message = message['current_message']
-        if current_message == conversation_context[0]:
-            print('repeat message')
+        if current_message == conversation_context[0]['content']:
+            log.info('last converation is the same as current message...')
+            log.info('previous conversation: %s'%conversation_context[1]['content'])
             plain_text = re.sub(r'<@\w+>', '', current_message)
             conversation_context[-1] = {
                 'role': 'user',
@@ -61,12 +64,22 @@ class SlackChannel():
             }
         else:
             if current_message == '':
+                log.info('no input...')
                 return 'no input'
             else:
-                print(conversation_context[1])
+                last_3_conv = conversation_context[-3:]
+                log.info('last 3 conversation: %s'%last_3_conv)
                 conversation_context.append({
                     'role': 'user',
                     'content': current_message
                 })
+        # 将list的元素index反序
+        conversation_context.reverse()
+        message_length = sum([len(i['content']) for i in conversation_context])
+        # 如果message_length大于4096，就删除第一个元素，直到message_length小于4096
+        while message_length > 4096:
+            conversation_context.pop(0)
+            message_length = sum([len(i['content']) for i in conversation_context])
+        log.info('current message length: %s'%message_length)
         model = ModelSelector(load_config()['type_choices']['model']).create_model()
         return model.reply(conversation_context)

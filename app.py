@@ -1,10 +1,11 @@
 from multiprocessing import Pool
 from common.selector import ChannelSelector
-from common.base import load_config
+from common.base import load_config,log
 
 
 
 def start_channel(channel_type):
+    log.info(f"Starting {channel_type} channel...")
     channel = ChannelSelector(channel_type).create_channel()
     channel.startup()
 
@@ -26,7 +27,8 @@ def main():
             pool.close()
             pool.join()
     except Exception as e:
-        print(e)
+        log.error(e)
+        log.warning("I can't start, please check your configuration")
         print('启动失败')
 
 if __name__ == '__main__':
