@@ -2,9 +2,8 @@ import re
 import json
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
-from common.config import load_config
-from models.openai_model import OpenAIModel
-
+from common.base import load_config
+from common.selector import ModelSelector
 
 
 
@@ -36,7 +35,7 @@ def handle_message_events(body, say):
         conversation_list.append(conversation_format)
     conversation_info = {
         'conversation_id': channel_id,
-        'conversation_context': conversation_list[::-1],
+        'conversation_context': conversation_list,
         'current_message': body['event']['text'],
     }
     reply_content = SlackChannel().handle_message(conversation_info)
@@ -50,14 +49,11 @@ class SlackChannel():
         handler.start()
         print("Slack channel is running...")
 
-    # def cache_conversation(self, conversation_id, conversation_context):
-    #     pass
-
     def handle_message(self, message):
-        # conversation_id = message['conversation_id']
         conversation_context = message['conversation_context']
         current_message = message['current_message']
-        if current_message == conversation_context[-1]:
+        if current_message == conversation_context[0]:
+            print('repeat message')
             plain_text = re.sub(r'<@\w+>', '', current_message)
             conversation_context[-1] = {
                 'role': 'user',
@@ -67,9 +63,10 @@ class SlackChannel():
             if current_message == '':
                 return 'no input'
             else:
+                print(conversation_context[1])
                 conversation_context.append({
                     'role': 'user',
                     'content': current_message
                 })
-        print(conversation_context)
-        return OpenAIModel().reply(conversation_context)
+        model = ModelSelector(load_config()['type_choices']['model']).create_model()
+        return model.reply(conversation_context)

@@ -1,5 +1,5 @@
 import openai
-from common.config import load_config
+from common.base import load_config
 
 
 
@@ -12,7 +12,6 @@ class OpenAIModel:
             openai.proxy = proxy
         
     def reply(self,conversation_context):
-
         try:
             response = openai.ChatCompletion.create(
                 model = self.__config['model']['openai']['model'],
