@@ -4,7 +4,7 @@ import sys
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 from common.base import load_config,log
-from common.selector import ModelSelector
+from core.selector import ModelSelector
 
 
 
