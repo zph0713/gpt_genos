@@ -17,11 +17,16 @@ def handle_message_events(body, say):
     user_id = body['event']['user']
     channel_id = body['event']['channel']
     log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
-    conversations = app.client.conversations_history(
-        token=load_config()['channels']['slack']['slack_bot_token'],
-        channel=channel_id,
-        limit=4096,
-    )
+    try:
+        conversations = app.client.conversations_history(
+            token=load_config()['channels']['slack']['slack_bot_token'],
+            channel=channel_id,
+            limit=4096,
+        )
+    except Exception as e:
+        log.error(e)
+        log.warning("I can't connect to the slack, please check your network connection")
+        return "我连接不到slack，请稍后重试"
     conversation_context = conversations['messages']
     conversation_list = []
     for conversation in conversation_context:
