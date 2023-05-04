@@ -1,5 +1,5 @@
 from multiprocessing import Pool
-from common.selector import ChannelSelector
+from core.selector import ChannelSelector
 from common.base import load_config,log
 
 
