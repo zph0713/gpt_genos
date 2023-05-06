@@ -24,7 +24,7 @@ class ConversationCache:
             'content': content
         }
         msg_cache.append(msg_fmt)
-        msg_length = sum([len(i) for i in msg_cache])
+        msg_length = sum([len(str(i)) for i in msg_cache])
         while msg_length > 4096:
             msg_cache.pop(0)
             msg_length = sum([len(str(i)) for i in msg_cache])
