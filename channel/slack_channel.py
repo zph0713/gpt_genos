@@ -41,7 +41,7 @@ def handle_message_events(body, say):
                         {
                             "type": "plain_text",
                             "text": "Author: K A Applegate",
-                            "emoji": true
+                            "emoji": True
                         }
                     ]
                 }
