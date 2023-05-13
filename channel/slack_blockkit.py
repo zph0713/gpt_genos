@@ -43,14 +43,17 @@ def cache_status(cache_info):
 
 def reply_message(reply_content):
     blocks = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": reply_content
-            }
-        }
-    ]
+		{
+			"type": "context",
+			"elements": [
+				{
+					"type": "plain_text",
+					"text": reply_content,
+					"emoji": True
+				}
+			]
+		}
+	]
     return {
         "blocks": blocks
     }
