@@ -24,13 +24,31 @@ def handle_message_events(body, say):
         cache_info = {
             'conversations_count': len(conversations),
             'conversations_length': sum([len(str(i)) for i in conversations]),
+            'user_conversations_count': len([i for i in conversations if i['role'] == 'user']),
+            'assistant_conversations_count': len([i for i in conversations if i['role'] == 'assistant']),
+            'system_conversations_count': len([i for i in conversations if i['role'] == 'system']),
             'last_conversation': conversations[-1],
             'previous_conversation': conversations[-2],
             'first_conversation': conversations[0],
             'second_conversation': conversations[1]
         }
-        # 将缓存信息以表格形式返回
-        say(f"```{cache_info}```")
+        # 将缓存信息以slack blockkit形式返回
+        block_msg = {
+            "blocks": [
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "plain_text",
+                            "text": "Author: K A Applegate",
+                            "emoji": true
+                        }
+                    ]
+                }
+            ]
+        }
+        say(block_msg)
+
     elif body['event']['text'] == '#help':
         log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
         say('输入#clear清空对话，输入#cache查看cache对话，输入#help查看帮助')
