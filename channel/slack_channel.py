@@ -13,6 +13,7 @@ handler = SocketModeHandler(app, load_config()['channels']['slack']['slack_app_t
 
 @app.event("message")
 def handle_message_events(body, say):
+    print(body)
     user_id = body['event']['user']
     channel_id = body['event']['channel']
     if body['event']['text'] == '#clear':
@@ -42,6 +43,8 @@ def handle_message_events(body, say):
         ConversationCache('slack',channel_id).save_msg('assistant',reply_content)
         log.info(f"Bot replies: {reply_content}")
         say(reply_message(reply_content))
+
+
 
 
 
