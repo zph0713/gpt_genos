@@ -21,7 +21,16 @@ def handle_message_events(body, say):
     elif body['event']['text'] == '#cache':
         conversations = ConversationCache('slack',channel_id).get_msg()
         log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
-        say(conversations)
+        cache_info = {
+            'conversations_count': len(conversations),
+            'conversations_length': sum([len(str(i)) for i in conversations]),
+            'last_conversation': conversations[-1],
+            'previous_conversation': conversations[-2],
+            'first_conversation': conversations[0],
+            'second_conversation': conversations[1]
+        }
+        # 将缓存信息以表格形式返回
+        say(f"```{cache_info}```")
     elif body['event']['text'] == '#help':
         log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
         say('输入#clear清空对话，输入#cache查看cache对话，输入#help查看帮助')
