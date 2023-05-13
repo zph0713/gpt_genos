@@ -33,3 +33,7 @@ class ConversationCache:
     
     def get_msg(self):
         return conversation_cache[self.channel_type][self.conversation_id]
+    
+    def clear_msg(self):
+        conversation_cache[self.channel_type][self.conversation_id] = []
+        log.info(f"清空缓存消息：{self.channel_type} {self.conversation_id}")
