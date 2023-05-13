@@ -53,6 +53,10 @@ class SlackChannel():
         handler.start()
         log.info("Slack channel is running...")
 
+    def shutdown(self):
+        handler.close()
+        log.info("Slack channel is closed...")
+
     def handle_message(self, conversation_context):
         model = ModelSelector(load_config()['type_choices']['model']).create_model()
         return model.reply(conversation_context)

@@ -1,7 +1,7 @@
+import signal
 from multiprocessing import Pool
 from core.selector import ChannelSelector
 from common.base import load_config,log
-
 
 
 def start_channel(channel_type):
@@ -9,7 +9,12 @@ def start_channel(channel_type):
     channel = ChannelSelector(channel_type).create_channel()
     channel.startup()
 
+def shutdown_channel(channel_type):
+    log.info(f"Shutting down {channel_type} channel...")
+    channel = ChannelSelector(channel_type).create_channel()
+    channel.shutdown()
 
+signal.signal(signal.SIGINT, shutdown_channel)
 
 def main():
     try:
