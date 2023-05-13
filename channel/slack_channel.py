@@ -3,6 +3,7 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 from common.base import load_config,log
 from core.selector import ModelSelector
 from core.conversation_cache import ConversationCache
+from channel.slack_blockkit import *
 
 
 
@@ -18,7 +19,7 @@ def handle_message_events(body, say):
         ConversationCache('slack',channel_id).clear_msg()
         log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
         say('对话已清空')
-    elif body['event']['text'] == '#cache':
+    elif body['event']['text'] == '#cache info':
         conversations = ConversationCache('slack',channel_id).get_msg()
         log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
         cache_info = {
@@ -26,28 +27,9 @@ def handle_message_events(body, say):
             'conversations_length': sum([len(str(i)) for i in conversations]),
             'user_conversations_count': len([i for i in conversations if i['role'] == 'user']),
             'assistant_conversations_count': len([i for i in conversations if i['role'] == 'assistant']),
-            'system_conversations_count': len([i for i in conversations if i['role'] == 'system']),
-            'last_conversation': conversations[-1],
-            'previous_conversation': conversations[-2],
-            'first_conversation': conversations[0],
-            'second_conversation': conversations[1]
+            'system_conversations_count': len([i for i in conversations if i['role'] == 'system'])
         }
-        # 将缓存信息以slack blockkit形式返回
-        block_msg = {
-            "blocks": [
-                {
-                    "type": "context",
-                    "elements": [
-                        {
-                            "type": "plain_text",
-                            "text": "Author: K A Applegate",
-                            "emoji": True
-                        }
-                    ]
-                }
-            ]
-        }
-        say(block_msg)
+        say(cache_status(cache_info))
 
     elif body['event']['text'] == '#help':
         log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
