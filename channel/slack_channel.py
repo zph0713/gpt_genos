@@ -13,7 +13,6 @@ handler = SocketModeHandler(app, load_config()['channels']['slack']['slack_app_t
 
 @app.event("message")
 def handle_message_events(body, say):
-    print(body)
     user_id = body['event']['user']
     channel_id = body['event']['channel']
     if body['event']['text'] == '#clear':
@@ -42,10 +41,26 @@ def handle_message_events(body, say):
         reply_content = SlackChannel().handle_message(conversations)
         ConversationCache('slack',channel_id).save_msg('assistant',reply_content)
         log.info(f"Bot replies: {reply_content}")
-        say(reply_message(reply_content))
+        if body['event']['channel_type'] == 'im':
+            say(reply_content)
+        elif body['event']['channel_type'] == 'group':
+            say(text=reply_content,thread_ts=body['event']['ts'])
 
 
+@app.event("app_mention")
+def handle_mention(body, say):
+    print(body)
+    user_id = body['event']['user']
+    channel_id = body['event']['channel']
+    ConversationCache('slack',channel_id).save_msg('user',body['event']['text'])
+    log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
+    conversations = ConversationCache('slack',channel_id).get_msg()
+    reply_content = SlackChannel().handle_message(conversations)
+    ConversationCache('slack',channel_id).save_msg('assistant',reply_content)
+    log.info(f"Bot replies: {reply_content}")
 
+    say(text=reply_content,thread_ts=body['event']['ts'])
+        
 
 
 class SlackChannel():
