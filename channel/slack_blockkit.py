@@ -7,7 +7,7 @@ def cache_status(cache_info):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": "Conversation Cache Status"
+                "text": "对话缓存状态"
             }
         },
         {
@@ -15,25 +15,40 @@ def cache_status(cache_info):
             "fields": [
                 {
                     "type": "mrkdwn",
-                    "text": f"*Conversations Count:*\n{cache_info['conversations_count']}"
+                    "text": f"*对话总数:*\n{cache_info['conversations_count']}"
                 },
                 {
                     "type": "mrkdwn",
-                    "text": f"*Conversations Length:*\n{cache_info['conversations_length']}"
+                    "text": f"*对话长度:*\n{cache_info['conversations_length']}"
                 },
                 {
                     "type": "mrkdwn",
-                    "text": f"*User Conversations Count:*\n{cache_info['user_conversations_count']}"
+                    "text": f"*用户对话数:*\n{cache_info['user_conversations_count']}"
                 },
                 {
                     "type": "mrkdwn",
-                    "text": f"*Assistant Conversations Count:*\n{cache_info['assistant_conversations_count']}"
+                    "text": f"*机器人对话数:*\n{cache_info['assistant_conversations_count']}"
                 },
                 {
                     "type": "mrkdwn",
-                    "text": f"*System Conversations Count:*\n{cache_info['system_conversations_count']}"
+                    "text": f"*系统对话数:*\n{cache_info['system_conversations_count']}"
                 }
             ]
+        }
+    ]
+    return {
+        "blocks": blocks
+    }
+
+
+def reply_message(reply_content):
+    blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": reply_content
+            }
         }
     ]
     return {

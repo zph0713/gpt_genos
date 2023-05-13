@@ -41,7 +41,7 @@ def handle_message_events(body, say):
         reply_content = SlackChannel().handle_message(conversations)
         ConversationCache('slack',channel_id).save_msg('assistant',reply_content)
         log.info(f"Bot replies: {reply_content}")
-        say(reply_content)
+        say(reply_message(reply_content))
 
 
 
