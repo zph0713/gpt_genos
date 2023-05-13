@@ -8,13 +8,10 @@ def start_channel(channel_type):
     log.info(f"Starting {channel_type} channel...")
     channel = ChannelSelector(channel_type).create_channel()
     channel.startup()
+    signal.signal(signal.SIGINT, channel.shutdown)
 
-def shutdown_channel(channel_type):
-    log.info(f"Shutting down {channel_type} channel...")
-    channel = ChannelSelector(channel_type).create_channel()
-    channel.shutdown()
 
-signal.signal(signal.SIGINT, shutdown_channel)
+
 
 def main():
     try:
