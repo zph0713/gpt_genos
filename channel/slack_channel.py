@@ -3,8 +3,8 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 from common.base import load_config,log
 from core.selector import ModelSelector
 from core.conversation_cache import ConversationCache
+from core.chat_commands import chat_commands
 from channel.slack_blockkit import *
-
 
 
 
@@ -15,85 +15,73 @@ handler = SocketModeHandler(app, load_config()['channels']['slack']['slack_app_t
 def handle_message_events(body, say):
     user_id = body['event']['user']
     channel_id = body['event']['channel']
-    if body['event']['text'] == '#clear':
-        ConversationCache('slack',channel_id).clear_msg()
-        log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
-        say('对话已清空')
-    elif body['event']['text'] == '#cache info':
-        conversations = ConversationCache('slack',channel_id).get_msg()
-        log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
-        cache_info = {
-            'conversations_count': len(conversations),
-            'conversations_length': sum([len(str(i)) for i in conversations]),
-            'user_conversations_count': len([i for i in conversations if i['role'] == 'user']),
-            'assistant_conversations_count': len([i for i in conversations if i['role'] == 'assistant']),
-            'system_conversations_count': len([i for i in conversations if i['role'] == 'system'])
-        }
-        say(cache_status(cache_info))
+    current_text = body['event']['text']
+    channel_type = body['event']['channel_type'] 
+    ts = body['event']['ts']
 
-    elif body['event']['text'] == '#help':
-        log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
-        say('输入#clear清空对话，输入#cache查看cache对话，输入#help查看帮助')
+    command_check = chat_commands(channel_type,channel_id,ts,user_id,current_text).handle()
+    if command_check != current_text:
+        say(command_check)
+        log.info(f"User {user_id} executes command in Channel {channel_id} at {ts}: {current_text}")
+        return
     else:
-        if body['event']['channel_type'] == 'im':
-            ConversationCache('slack',channel_id).save_msg('user',body['event']['text'])
-            log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
-            conversations = ConversationCache('slack',channel_id).get_msg()
+        if channel_type == 'im':
+            ConversationCache('slack',ts).save_msg('user',current_text)
+            log.info(f"User {user_id} in Channel {channel_id} at {ts} says: {current_text}")
+            conversations = ConversationCache('slack',ts).get_msg()
             reply_content = SlackChannel().handle_message(conversations)
-            ConversationCache('slack',channel_id).save_msg('assistant',reply_content)
-            log.info(f"Bot replies: {reply_content}")
+            ConversationCache('slack',ts).save_msg('assistant',reply_content)
+            log.info(f"Bot replies in Channel {channel_id} at {ts}: {reply_content}")
             say(reply_content)
-        elif body['event']['channel_type'] == 'group':
+
+        elif channel_type == 'group':
             bot_id = None
-            ts = None
-            for authorization in body['authorizations']:
-                if authorization['team_id'] == body['team_id'] and authorization['is_bot'] == True and authorization['user_id'] == body['event']['text'].split(' ')[0].replace('<@','').replace('>',''):
-                    bot_id = authorization['user_id']
-                    ts = body['event']['ts']
-                    log.info(f"Bot {bot_id} is mentioned in Channel {channel_id} at {ts}")
-                    break
-                else:
-                    return
-            if body['event']['text'].split(' ')[0] == f'<@{bot_id}>':
-                log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
-                remove_at_text = body['event']['text'].replace(f'<@{bot_id}>','').replace(' ','')
-                modify_text = body['event']['text'].replace(f'<@{bot_id}>','')
-                if remove_at_text == '':
-                    say('Hi,什么事？',thread_ts=ts)
-                    return
-                else:
-                    ConversationCache('slack',channel_id).save_msg('user',modify_text)
-                    conversations = ConversationCache('slack',channel_id).get_msg()
+            if 'authorizations' in body:
+                for authorization in body['authorizations']:
+                    if authorization['is_bot'] == True:
+                        bot_id = authorization['user_id']
+                        break
+                    else:
+                        continue
+            if bot_id:
+                if 'thread_ts' in body['event']:
+                    ConversationCache('slack',ts).save_msg('user',current_text)
+                    log.info(f"User {user_id} in Channel {channel_id} at {ts} says: {current_text}")
+                    conversations = ConversationCache('slack',ts).get_msg()
                     reply_content = SlackChannel().handle_message(conversations)
-                    ConversationCache('slack',channel_id).save_msg('assistant',reply_content)
-                    log.info(f"Bot replies: {reply_content}")
+                    ConversationCache('slack',ts).save_msg('assistant',reply_content)
                     say(reply_content,thread_ts=ts)
+                    log.info(f"Bot replies in Channel {channel_id} at {ts}: {reply_content}")
+                else:
+                    if current_text.split(' ')[0] == f'<@{bot_id}>':
+                        log.info(f"User {user_id} in Channel {channel_id} says: {current_text}")
+                        remove_at_text = current_text.replace(f'<@{bot_id}>','').replace(' ','')
+                        modify_text = current_text.replace(f'<@{bot_id}>','')
+                        if remove_at_text == '':
+                            say('Hi,什么事？',thread_ts=ts)
+                        else:
+                            ConversationCache('slack',ts).save_msg('user',modify_text)
+                            log.info(f"User {user_id} in Channel {ts} says: {modify_text}")
+                            conversations = ConversationCache('slack',ts).get_msg()
+                            reply_content = SlackChannel().handle_message(conversations)
+                            ConversationCache('slack',ts).save_msg('assistant',reply_content)
+                            log.info(f"Bot replies in Channel {channel_id} at {ts}: {reply_content}")
+                            say(reply_content,thread_ts=ts)
+                    else:
+                        return
             else:
-                if body['event']['ts'] == ts:
-                    ConversationCache('slack',channel_id).save_msg('user',body['event']['text'])
-                    log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
-                    conversations = ConversationCache('slack',channel_id).get_msg()
-                    reply_content = SlackChannel().handle_message(conversations)
-                    ConversationCache('slack',channel_id).save_msg('assistant',reply_content)
-                    log.info(f"Bot replies: {reply_content}")
-                    say(reply_content,thread_ts=ts)
-                else:
-                    return
+                return
+
+
+
+      
+
+      
+
 
 @app.event("app_mention")
 def handle_mention(body, say):
     return
-#     user_id = body['event']['user']
-#     channel_id = body['event']['channel']
-#     ConversationCache('slack',channel_id).save_msg('user',body['event']['text'])
-#     log.info(f"User {user_id} in Channel {channel_id} says: {body['event']['text']}")
-#     conversations = ConversationCache('slack',channel_id).get_msg()
-#     reply_content = SlackChannel().handle_message(conversations)
-#     ConversationCache('slack',channel_id).save_msg('assistant',reply_content)
-#     log.info(f"Bot replies: {reply_content}")
-
-#     say(text=reply_content,thread_ts=body['event']['ts'])
-        
 
 
 class SlackChannel():

@@ -12,7 +12,7 @@ class ConversationCache:
             conversation_cache[self.channel_type] = {}
             self.channel = conversation_cache[self.channel_type]
         
-    def save_msg(self,role,content):
+    def save_msg(self,role,content,user=None):
         try:
             msg_cache = self.channel[self.conversation_id]
         except KeyError:
@@ -23,6 +23,8 @@ class ConversationCache:
             'role': role,
             'content': content
         }
+        if user:
+            msg_fmt['user'] = user
         msg_cache.append(msg_fmt)
         msg_length = sum([len(str(i)) for i in msg_cache])
         while msg_length > 4096:
