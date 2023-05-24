@@ -2,7 +2,7 @@ from common.base import log
 
 conversation_cache = {}
 
-class ConversationCache:
+class ConversationCache(object):
     def __init__(self,channel_type,conversation_id):
         self.channel_type = channel_type
         self.conversation_id = conversation_id

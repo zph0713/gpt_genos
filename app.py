@@ -4,13 +4,12 @@ from core.selector import ChannelSelector
 from common.base import load_config,log
 
 
+
 def start_channel(channel_type):
     log.info(f"Starting {channel_type} channel...")
     channel = ChannelSelector(channel_type).create_channel()
     channel.startup()
     signal.signal(signal.SIGINT, channel.shutdown)    
-
-
 
 
 
