@@ -33,7 +33,7 @@ def handle_message_events(body, say):
         if channel_type == 'im':
             ConversationCache('slack',user_id).save_msg('user',current_text)
             log.info(f"User {user_id} in Channel {channel_id} says: {current_text}")
-            conversations = ConversationCache('slack',ts).get_msg()
+            conversations = ConversationCache('slack',user_id).get_msg()
             reply_content = SlackChannel().handle_message(conversations)
             ConversationCache('slack',user_id).save_msg('assistant',reply_content)
             log.info(f"Bot replies in Channel {channel_id}: {reply_content}")
