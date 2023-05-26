@@ -31,12 +31,12 @@ def handle_message_events(body, say):
     
     else:
         if channel_type == 'im':
-            ConversationCache('slack',ts).save_msg('user',current_text)
-            log.info(f"User {user_id} in Channel {channel_id} at {ts} says: {current_text}")
+            ConversationCache('slack',user_id).save_msg('user',current_text)
+            log.info(f"User {user_id} in Channel {channel_id} says: {current_text}")
             conversations = ConversationCache('slack',ts).get_msg()
             reply_content = SlackChannel().handle_message(conversations)
-            ConversationCache('slack',ts).save_msg('assistant',reply_content)
-            log.info(f"Bot replies in Channel {channel_id} at {ts}: {reply_content}")
+            ConversationCache('slack',user_id).save_msg('assistant',reply_content)
+            log.info(f"Bot replies in Channel {channel_id}: {reply_content}")
             say(reply_content)
 
         elif channel_type == 'group':
@@ -57,22 +57,22 @@ def handle_message_events(body, say):
                     if remove_at_text == '':
                         say('Hi,什么事？',thread_ts=cache_id)
                     else:
-                        ConversationCache('slack',cache_id).save_msg('user',modify_text)
+                        ConversationCache('slack',user_id).save_msg('user',modify_text)
                         log.info(f"User {user_id} in Channel {cache_id} says: {modify_text}")
-                        conversations = ConversationCache('slack',cache_id).get_msg()
+                        conversations = ConversationCache('slack',user_id).get_msg()
                         reply_content = SlackChannel().handle_message(conversations)
-                        ConversationCache('slack',cache_id).save_msg('assistant',reply_content)
-                        log.info(f"Bot replies in Channel {channel_id} at {cache_id}: {reply_content}")
+                        ConversationCache('slack',user_id).save_msg('assistant',reply_content)
+                        log.info(f"Bot replies in Channel {channel_id}: {reply_content}")
                         say(reply_content,thread_ts=cache_id)
                 else:
                     if 'thread_ts' in body['event']:
-                        ConversationCache('slack',cache_id).save_msg('user',current_text)
-                        log.info(f"User {user_id} in Channel {channel_id} at {cache_id} says: {current_text}")
-                        conversations = ConversationCache('slack',cache_id).get_msg()
+                        ConversationCache('slack',user_id).save_msg('user',current_text)
+                        log.info(f"User {user_id} in Channel {channel_id} says: {current_text}")
+                        conversations = ConversationCache('slack',user_id).get_msg()
                         reply_content = SlackChannel().handle_message(conversations)
-                        ConversationCache('slack',cache_id).save_msg('assistant',reply_content)
+                        ConversationCache('slack',user_id).save_msg('assistant',reply_content)
                         say(reply_content,thread_ts=cache_id)
-                        log.info(f"Bot replies in Channel {channel_id} at {cache_id}: {reply_content}")
+                        log.info(f"Bot replies in Channel {channel_id}: {reply_content}")
                     else:
                         return
             else:
@@ -81,10 +81,6 @@ def handle_message_events(body, say):
             return
 
 
-
-      
-
-      
 
 
 @app.event("app_mention")
