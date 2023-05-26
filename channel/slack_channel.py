@@ -23,7 +23,7 @@ def handle_message_events(body, say):
     else:
         cache_id = ts
 
-    command_check = chat_commands(channel_type,channel_id,cache_id,user_id,current_text).handle()
+    command_check = chat_commands(channel_type,channel_id,user_id,current_text).handle()
     if command_check != current_text:
         say(command_check)
         log.info(f"User {user_id} executes command in Channel {channel_id} at {cache_id}: {current_text}")
