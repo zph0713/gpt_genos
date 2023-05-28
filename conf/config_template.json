@@ -5,6 +5,7 @@
         "channels": ["slack"]
     },
     "proxy": "",
+    "cache": "redis://localhost:6379/0",
     "model":{
         "openai": {
             "api_key": "sk-xxx",

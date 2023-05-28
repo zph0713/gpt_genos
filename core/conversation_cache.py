@@ -1,16 +1,18 @@
 from common.base import log
+from common.caches import RedisCache
 
-conversation_cache = {}
+
+
 
 class ConversationCache(object):
     def __init__(self,channel_type,conversation_id):
         self.channel_type = channel_type
         self.conversation_id = conversation_id
-        try:
-            self.channel = conversation_cache[self.channel_type]
-        except KeyError:
-            conversation_cache[self.channel_type] = {}
-            self.channel = conversation_cache[self.channel_type]
+        self.cache = RedisCache()
+        self.channel = self.cache.get(self.channel_type)
+        if self.channel == None:
+            self.cache.set(self.channel_type, {})
+            self.channel = self.cache.get(self.channel_type)
         
     def save_msg(self,role,content,user=None):
         try:
@@ -30,12 +32,14 @@ class ConversationCache(object):
         while msg_length > 4096:
             msg_cache.pop(0)
             msg_length = sum([len(str(i)) for i in msg_cache])
-        conversation_cache[self.channel_type][self.conversation_id] = msg_cache
+        self.channel[self.conversation_id] = msg_cache
+        self.cache.set(self.channel_type, self.channel)
         log.info(f"当前的缓存消息长度为：{msg_length},当前的缓存消息数量为：{len(msg_cache)}")
     
     def get_msg(self):
-        return conversation_cache[self.channel_type][self.conversation_id]
+        return self.channel[self.conversation_id]
     
     def clear_msg(self):
-        conversation_cache[self.channel_type][self.conversation_id] = []
+        self.channel[self.conversation_id] = []
+        self.cache.set(self.channel_type, self.channel)
         log.info(f"清空缓存消息：{self.channel_type} {self.conversation_id}")
